@@ -2,6 +2,7 @@ import expres from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
+import { ApiError } from '../src/utils/ApiError.js';
 
 const app = expres();
 

@@ -8,6 +8,252 @@ import {
 import { ApiResponse } from '../utils/ApiResponse.js';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
+import { role_type_enum, gender_enum, marital_status_enum, blood_groups_enum } from '../utils/TypeEnum.js';
+
+const classifyFileByMimeType = (mimetype) => {
+  if (mimetype.startsWith('image/')) {
+    return 'image'; // All image MIME types (e.g., image/jpeg, image/png, etc.)
+  } else if (mimetype.startsWith('video/')) {
+    return 'video'; // All video MIME types (e.g., video/mp4, video/webm, etc.)
+  } else {
+    return 'file'; // Anything else, treat as raw file (e.g., pdf, docx, zip, etc.)
+  }
+};
+
+const registerUser = asyncHandler(async (req, res) => {
+  const {
+    managerId,
+    bonusId,
+    employeeDocumentId,
+    reimbushmentId,
+    name,
+    email,
+    annualSalary,
+    advanceSalary,
+    roleType,
+    dateOfHiring,
+    title,
+    location,
+    bankName,
+    ifscCode,
+    accountNo,
+    panNo,
+    beneficiaryName,
+    pfStatus,
+    pfUanNo,
+    professionalTax,
+    lwfStatus,
+    esicStatus,
+    esicIpNumber,
+    phoneNumber,
+    gender,
+    dateOfBirth,
+    personalPhoneNumber,
+    personalEmailAddress,
+    fathersName,
+    fathersDOB,
+    mothersName,
+    mothersDOB,
+    spousesName,
+    spousesDOB,
+    child1Name,
+    child1DOB,
+    child2Name,
+    child2DOB,
+    permanentAddress,
+    temporaryAddress,
+    highestEducationalQualification,
+    aadhaarNumber,
+    maritalStatus,
+    workExperience,
+    previousEmployer,
+    previousDesignation,
+    marriageAnniversary,
+    emergencyContactName,
+    emergencyContactNumber,
+    bloodGroup,
+    nationality,
+    password,
+  } = req.body;
+
+  console.log(req.body);
+  if ([name, email, password].some((fields) => fields?.trim() === '')) {
+    throw new ApiError(400, 'Please fill all the Required fields');
+  }
+
+  if(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      throw new ApiError(400, 'Invalid email format');
+    }
+  }
+
+  if(personalEmailAddress) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(personalEmailAddress)) {
+      throw new ApiError(400, 'Invalid personal email format');
+    }
+  }
+
+  if(roleType) {
+    if (!role_type_enum.includes(roleType)) {
+      throw new ApiError(400, 'Invalid role type');
+    }
+  }
+
+  if(gender) {
+    if (!gender_enum.includes(gender)) {
+      throw new ApiError(400, 'Invalid gender');
+    }
+  }
+
+  if(maritalStatus) {
+    if (!marital_status_enum.includes(maritalStatus)) {
+      throw new ApiError(400, 'Invalid marital status');
+    }
+  }
+
+  if(bloodGroup) {
+    if (!blood_groups_enum.includes(bloodGroup)) {
+      throw new ApiError(400, 'Invalid blood group');
+    }
+  }
+
+  if(managerId) {
+    const isValidObjectId  = await isValidObjectId(managerId);
+    if (!isValidObjectId) {
+      throw new ApiError(400, 'Invalid managerId');
+    }
+
+    const isMangerExists = await User.findById(managerId);
+
+    if(!isMangerExists) {
+      throw new ApiError(400, 'Invalid managerId');
+    }
+  }
+
+  if(bonusId) {
+    const isValidObjectId  = await isValidObjectId(bonusId);
+    if (!isValidObjectId) {
+      throw new ApiError(400, 'Invalid Bonus Id');
+    }
+
+    const isBonusExists = await Bonus.findById(bonusId);
+
+    if(!isBonusExists) {
+      throw new ApiError(400, 'Invalid Bonus Id');
+    }
+  }
+
+  if(employeeDocumentId) {
+    const isValidObjectId  = await isValidObjectId(employeeDocumentId);
+    if (!isValidObjectId) {
+      throw new ApiError(400, 'Invalid Employee Document Id');
+    }
+
+    const isEmployeeDocumentExists = await EmployeeDocument.findById(employeeDocumentId);
+
+    if(!isEmployeeDocumentExists) {
+      throw new ApiError(400, 'Invalid Employee Document Id');
+    }
+  }
+
+  if(reimbushmentId) {
+    const isValidObjectId  = await isValidObjectId(reimbushmentId);
+    if (!isValidObjectId) {
+      throw new ApiError(400, 'Invalid Reimbushment Id');
+    }
+
+    const isReimbushmentExists = await Reimbursement.findById(reimbushmentId);
+
+    if(!isReimbushmentExists) {
+      throw new ApiError(400, 'Invalid Reimbushment Id');
+        }
+  }
+
+    
+  const existedUser = await User.findOne({ email });
+
+  if (existedUser) {
+    throw new ApiError(401, 'User already exists');
+  }
+
+  const profileImageLocalPath = req.file?.path;
+  let profileImagePath;
+  if (profileImageLocalPath) {
+    // Classify the file based on MIME type
+    const resourceType = classifyFileByMimeType(req?.file?.mimetype);
+
+    profileImagePath = await uploadOnCloudinary(
+      profileImageLocalPath,
+      resourceType
+    );
+  }
+
+  const user = await User.create({
+    managerId,
+    bonusId,
+    employeeDocumentId,
+    reimbushmentId,
+    name,
+    email,
+    annualSalary,
+    advanceSalary,
+    roleType,
+    dateOfHiring,
+    title,
+    location,
+    bankName,
+    ifscCode,
+    accountNo,
+    panNo,
+    beneficiaryName,
+    pfStatus,
+    pfUanNo,
+    professionalTax,
+    lwfStatus,
+    esicStatus,
+    esicIpNumber,
+    phoneNumber,
+    gender,
+    dateOfBirth,
+    personalPhoneNumber,
+    personalEmailAddress,
+    fathersName,
+    fathersDOB,
+    mothersName,
+    mothersDOB,
+    spousesName,
+    spousesDOB,
+    child1Name,
+    child1DOB,
+    child2Name,
+    child2DOB,
+    permanentAddress,
+    temporaryAddress,
+    highestEducationalQualification,
+    aadhaarNumber,
+    maritalStatus,
+    workExperience,
+    previousEmployer,
+    previousDesignation,
+    marriageAnniversary,
+    emergencyContactName,
+    emergencyContactNumber,
+    bloodGroup,
+    nationality,
+    password,
+    profileImage: profileImagePath ? profileImagePath?.url : '',
+  });
+
+  if (!user) {
+    throw new ApiError(500, 'Internal Server Error Try Again');
+  }
+
+  return res
+    .status(201)
+    .json(new ApiResponse(200, user, 'User Registered Successfully'));
+});
 
 const generateAccessAndRefreshToken = async (userId) => {
   try {
@@ -24,83 +270,6 @@ const generateAccessAndRefreshToken = async (userId) => {
     );
   }
 };
-
-const registerUser = asyncHandler(async (req, res) => {
-  /*
-    get User Details from Frontend 
-    validation -- not empty
-    check if user exists
-    check for images 
-    check for avatar
-    upload image on cloudinary - avatar & coverImage
-    create user object  -- create entry in db
-    remove password and refresh token files from response
-    check for user creation 
-    return response
-    */
-  const { username, email, mobNo, fullName, password } = req.body;
-
-  if (
-    [fullName, email, password, username, mobNo].some(
-      (fields) => fields?.trim() === ''
-    )
-  ) {
-    throw new ApiError(400, 'Please fill all the fields');
-  }
-
-  const existedUser = await User.findOne({
-    $or: [{ username }, { email }],
-  });
-
-  if (existedUser) {
-    throw new ApiError(409, 'User already exists');
-  }
-
-  const avatarLocalPath = req.files?.avatar[0]?.path;
-  console.log(avatarLocalPath);
-
-  let coverImageLocalPath;
-  if (
-    req.files &&
-    Array.isArray(req.files.coverImage) &&
-    req.files.coverImage.length > 0
-  ) {
-    coverImageLocalPath = req.files?.coverImage[0].path;
-  }
-
-  if (!avatarLocalPath) {
-    throw new ApiError(400, 'Avatar file is Required');
-  }
-
-  const avatar = await uploadOnCloudinary(avatarLocalPath, 'image');
-  const coverImage = await uploadOnCloudinary(coverImageLocalPath, 'image');
-
-  if (!avatar) {
-    throw new ApiError(500, 'Something went wrong uploading avatar Image');
-  }
-
-  const user = await User.create({
-    username,
-    mobNo,
-    email,
-    fullName,
-    avatar: avatar?.url,
-    coverImage: coverImage?.url || '',
-    password,
-  });
-
-  const createdUser = await User.findById(user._id).select(
-    '-password -refreshToken'
-  );
-
-  if (!createdUser) {
-    throw new ApiError(500, 'Internal Server Error Try Again');
-  }
-
-  return res
-    .status(201)
-    .json(new ApiResponse(200, createdUser, 'User Registered Successfully'));
-});
 
 const loginUser = asyncHandler(async (req, res) => {
   /*  
