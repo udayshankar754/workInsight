@@ -13,9 +13,28 @@ const attandanceRecordSchema = new mongoose.Schema(
     date: {
       type: Date,
     },
+    isHoliday : {
+      type: Boolean,
+      default: false,
+    },
+    holidayReason : {
+      type: String,
+    },
     loginTime: {
       type: String,
     },
+    loginLat: {
+      type: Number
+    },
+    loginLang: {
+      type: Number
+    },
+    logoutLat: {
+      type: Number
+    },
+    logoutLang: {
+      type: Number
+    },   
     logoutTime: {
       type: String,
     },

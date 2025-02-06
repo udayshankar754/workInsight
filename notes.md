@@ -1,5 +1,8 @@
 # Work Insight Project Documentation
 
+```helper
+touch src/routes/projectSection.routes.js src/controllers/projectSection.controllers.js
+```
 ## Base Er Docs
 
 ```
