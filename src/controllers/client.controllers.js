@@ -14,12 +14,12 @@ const createClient = asyncHandler( async (req, res) => {
     throw new ApiError(400, 'Client with the same email already exists');
   }
   const client = await Client.create({ name, email });
-  res.status(201).json(new ApiResponse(200 , client , 'Client created successfully'));
+  return res.status(201).json(new ApiResponse(200 , client , 'Client created successfully'));
 });
 
 const getAllClients = asyncHandler(async (req, res) => {
   const clients = await Client.find({});
-  res.status(200).json(new ApiResponse(200, clients, 'All Clients fetched successfully'));
+  return res.status(200).json(new ApiResponse(200, clients, 'All Clients fetched successfully'));
 });
 
 const getClientById = asyncHandler(async (req, res) => {
@@ -37,7 +37,7 @@ const getClientById = asyncHandler(async (req, res) => {
   if (!client) {
     throw new ApiError(404, 'Client not found');
   }
-  res.status(200).json(new ApiResponse(200, client, 'Client fetched successfully'));
+  return res.status(200).json(new ApiResponse(200, client, 'Client fetched successfully'));
 });
 
 const updateClient = asyncHandler(async (req, res) => {
@@ -58,7 +58,7 @@ const updateClient = asyncHandler(async (req, res) => {
   if (!client) {
     throw new ApiError(404, 'Client not found');
   }
-  res.status(200).json(new ApiResponse(200, client, 'Client updated successfully'));
+  return res.status(200).json(new ApiResponse(200, client, 'Client updated successfully'));
 });
 
 const deleteClient = asyncHandler(async (req, res) => {
@@ -76,7 +76,7 @@ const deleteClient = asyncHandler(async (req, res) => {
   if (!client) {
     throw new ApiError(404, 'Client not found');
   }
-  res.status(200).json(new ApiResponse(200, null, 'Client deleted successfully'));
+  return res.status(200).json(new ApiResponse(200, null, 'Client deleted successfully'));
 });
 
 

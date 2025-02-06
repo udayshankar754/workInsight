@@ -17,4 +17,7 @@ const blood_groups_enum = [
   'Rh-',
 ];
 
-export { role_type_enum, gender_enum, marital_status_enum, blood_groups_enum };
+const project_status_enum = ['Pending', 'In Progress', 'Review', 'On Hold', 'Testing', 'Ready for Deployment' , 'Completed'];
+;
+
+export { role_type_enum, gender_enum, marital_status_enum, blood_groups_enum  , project_status_enum};

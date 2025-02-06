@@ -1,4 +1,7 @@
 import mongoose from 'mongoose';
+import {
+  project_status_enum,
+} from '../utils/TypeEnum.js';
 
 const projectSectionSchema = new mongoose.Schema(
   {
@@ -20,6 +23,21 @@ const projectSectionSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
     },
+    isCompleted: {
+      type: Boolean,
+      default: false,
+    },
+    projectStatus: {
+      type: String,
+      enum: project_status_enum,
+      default: 'Pending',
+    },
+    projectDeadline : {
+      type: Date,
+    },
+    projectPriority : {
+      type : Number,
+    }
   },
   {
     timestamps: true,
