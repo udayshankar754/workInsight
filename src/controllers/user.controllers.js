@@ -2,13 +2,17 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
 import { User } from '../models/user.models.js';
 import {
-  removeFromCloudinary,
   uploadOnCloudinary,
 } from '../utils/cloudinary.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import jwt from 'jsonwebtoken';
-import mongoose from 'mongoose';
-import { role_type_enum, gender_enum, marital_status_enum, blood_groups_enum } from '../utils/TypeEnum.js';
+import {
+  role_type_enum,
+  gender_enum,
+  marital_status_enum,
+  blood_groups_enum,
+} from '../utils/TypeEnum.js';
+import { options } from '../utils/sharedData.js';
 
 const classifyFileByMimeType = (mimetype) => {
   if (mimetype.startsWith('image/')) {
@@ -22,16 +26,9 @@ const classifyFileByMimeType = (mimetype) => {
 
 const registerUser = asyncHandler(async (req, res) => {
   const {
-    managerId,
-    bonusId,
-    employeeDocumentId,
-    reimbushmentId,
     name,
     email,
-    annualSalary,
-    advanceSalary,
     roleType,
-    dateOfHiring,
     title,
     location,
     bankName,
@@ -39,11 +36,7 @@ const registerUser = asyncHandler(async (req, res) => {
     accountNo,
     panNo,
     beneficiaryName,
-    pfStatus,
     pfUanNo,
-    professionalTax,
-    lwfStatus,
-    esicStatus,
     esicIpNumber,
     phoneNumber,
     gender,
@@ -76,102 +69,48 @@ const registerUser = asyncHandler(async (req, res) => {
     password,
   } = req.body;
 
-  console.log(req.body);
   if ([name, email, password].some((fields) => fields?.trim() === '')) {
     throw new ApiError(400, 'Please fill all the Required fields');
   }
 
-  if(email) {
+  if (email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       throw new ApiError(400, 'Invalid email format');
     }
   }
 
-  if(personalEmailAddress) {
+  if (personalEmailAddress) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(personalEmailAddress)) {
       throw new ApiError(400, 'Invalid personal email format');
     }
   }
 
-  if(roleType) {
+  if (roleType) {
     if (!role_type_enum.includes(roleType)) {
       throw new ApiError(400, 'Invalid role type');
     }
   }
 
-  if(gender) {
+  if (gender) {
     if (!gender_enum.includes(gender)) {
       throw new ApiError(400, 'Invalid gender');
     }
   }
 
-  if(maritalStatus) {
+  if (maritalStatus) {
     if (!marital_status_enum.includes(maritalStatus)) {
       throw new ApiError(400, 'Invalid marital status');
     }
   }
 
-  if(bloodGroup) {
+  if (bloodGroup) {
     if (!blood_groups_enum.includes(bloodGroup)) {
       throw new ApiError(400, 'Invalid blood group');
     }
   }
 
-  if(managerId) {
-    const isValidObjectId  = await isValidObjectId(managerId);
-    if (!isValidObjectId) {
-      throw new ApiError(400, 'Invalid managerId');
-    }
-
-    const isMangerExists = await User.findById(managerId);
-
-    if(!isMangerExists) {
-      throw new ApiError(400, 'Invalid managerId');
-    }
-  }
-
-  if(bonusId) {
-    const isValidObjectId  = await isValidObjectId(bonusId);
-    if (!isValidObjectId) {
-      throw new ApiError(400, 'Invalid Bonus Id');
-    }
-
-    const isBonusExists = await Bonus.findById(bonusId);
-
-    if(!isBonusExists) {
-      throw new ApiError(400, 'Invalid Bonus Id');
-    }
-  }
-
-  if(employeeDocumentId) {
-    const isValidObjectId  = await isValidObjectId(employeeDocumentId);
-    if (!isValidObjectId) {
-      throw new ApiError(400, 'Invalid Employee Document Id');
-    }
-
-    const isEmployeeDocumentExists = await EmployeeDocument.findById(employeeDocumentId);
-
-    if(!isEmployeeDocumentExists) {
-      throw new ApiError(400, 'Invalid Employee Document Id');
-    }
-  }
-
-  if(reimbushmentId) {
-    const isValidObjectId  = await isValidObjectId(reimbushmentId);
-    if (!isValidObjectId) {
-      throw new ApiError(400, 'Invalid Reimbushment Id');
-    }
-
-    const isReimbushmentExists = await Reimbursement.findById(reimbushmentId);
-
-    if(!isReimbushmentExists) {
-      throw new ApiError(400, 'Invalid Reimbushment Id');
-        }
-  }
-
-    
   const existedUser = await User.findOne({ email });
 
   if (existedUser) {
@@ -191,16 +130,9 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 
   const user = await User.create({
-    managerId,
-    bonusId,
-    employeeDocumentId,
-    reimbushmentId,
     name,
     email,
-    annualSalary,
-    advanceSalary,
     roleType,
-    dateOfHiring,
     title,
     location,
     bankName,
@@ -208,11 +140,7 @@ const registerUser = asyncHandler(async (req, res) => {
     accountNo,
     panNo,
     beneficiaryName,
-    pfStatus,
     pfUanNo,
-    professionalTax,
-    lwfStatus,
-    esicStatus,
     esicIpNumber,
     phoneNumber,
     gender,
@@ -272,26 +200,19 @@ const generateAccessAndRefreshToken = async (userId) => {
 };
 
 const loginUser = asyncHandler(async (req, res) => {
-  /*  
-    req body -- data
-    username or email
-    find user
-    check if password is correct
-    access token and refresh token
-    send cookies
-     */
+  const { email, password } = req.body;
 
-  const { email, username, password } = req.body;
-
-  if (!(username && email)) {
-    throw new ApiError(400, 'Please enter a username and email');
+  if (!email && !password) {
+    throw new ApiError(400, 'Please fill your email and password');
   }
 
-  const user = await User.findOne({
-    $and: [{ username }, { email }],
-  });
+  const user = await User.findOne({ email }).select('+password');
 
   if (!user) {
+    throw new ApiError(404, 'User does not exist');
+  }
+
+  if (user?.isDeleted == true) {
     throw new ApiError(404, 'User does not exist');
   }
 
@@ -302,17 +223,10 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 
   const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
-    user._id
+    user?._id
   );
 
-  const loggedInUser = await User.findById(user._id).select(
-    ' -password -refreshToken'
-  );
-
-  const options = {
-    httpOnly: true,
-    secure: true,
-  };
+  const loggedInUser = await User.findById(user?._id);
 
   return res
     .status(200)
@@ -322,7 +236,14 @@ const loginUser = asyncHandler(async (req, res) => {
       new ApiResponse(
         200,
         {
-          user: loggedInUser,
+          user: {
+            _id: loggedInUser?._id,
+            name: loggedInUser?.name,
+            email: loggedInUser?.email,
+            roleType: loggedInUser?.roleType,
+            title: loggedInUser?.title,
+            isDeleted: loggedInUser?.isDeleted,
+          },
           accessToken,
           refreshToken,
         },
@@ -343,11 +264,7 @@ const logoutUser = asyncHandler(async (req, res) => {
       new: true,
     }
   );
-
-  const options = {
-    httpOnly: true,
-    secure: true,
-  };
+  req.user = null;
 
   return res
     .status(200)
@@ -356,6 +273,7 @@ const logoutUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, 'User Logged Out Successfully'));
 });
 
+// TODO:
 const refreshAccessToken = asyncHandler(async (req, res) => {
   const incomingRefreshToken =
     req.cookies?.refreshToken || req?.body?.refreshToken;
@@ -370,22 +288,16 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       process.env.REFRESH_TOKEN_SECRET
     );
 
-    const user = await User.findById(decodedToken?._id).select(
-      ' -password -refreshToken'
-    );
+    const user = await User.findById(decodedToken?._id).select('+refreshToken');
 
     if (!user) {
       throw new ApiError(401, 'Invalid Refresh Token');
     }
 
-    if (incomingRefreshToken != user?.refreshToken) {
+    if (incomingRefreshToken !== user?.refreshToken ) {
+      console.log(incomingRefreshToken , "user",user?.refreshToken );
       throw new ApiError(401, 'Refresh Token is Expired or used');
     }
-
-    const options = {
-      httpOnly: true,
-      secure: true,
-    };
 
     const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
       user?._id
@@ -398,7 +310,14 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         new ApiResponse(
           200,
           {
-            user: user,
+            user: {
+              _id: loggedInUser?._id,
+              name: loggedInUser?.name,
+              email: loggedInUser?.email,
+              roleType: loggedInUser?.roleType,
+              title: loggedInUser?.title,
+              isDeleted: loggedInUser?.isDeleted,
+            },
             accessToken,
             refreshToken,
           },
@@ -412,8 +331,8 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
 const changeCurrentPassword = asyncHandler(async (req, res) => {
   const { oldPassword, newPassword } = req.body;
-  const user = await User.findById(req.user._id);
-  const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+  const user = await User.findById(req?.user?._id).select('+password');
+  const isPasswordCorrect = await user?.isPasswordCorrect(oldPassword);
 
   if (!isPasswordCorrect) {
     throw new ApiError(401, 'Invalid Old Password');
@@ -428,30 +347,85 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, 'Password Changed Successfully'));
 });
 
-const getCurrentUser = asyncHandler(async (req, res) => {
-  return res
-    .status(200)
-    .json(new ApiResponse(200, req.user, 'User Fetched Successfully'));
-});
-
 const updateAccountDetails = asyncHandler(async (req, res) => {
-  const { email, fullName } = req.body;
-  if (!(email || fullName)) {
-    throw new ApiError(400, 'Please fill all the fields');
+  const { name, bankName , ifscCode , accountNo , panNo , beneficiaryName , phoneNumber ,gender , dateOfBirth , personalPhoneNumber , personalEmailAddress , fathersName , fathersDOB, mothersName , mothersDOB , spousesName , spousesDOB , child1Name , child1DOB , child2Name , child2DOB , permanentAddress , temporaryAddress , highestEducationalQualification , maritalStatus,aadhaarNumber , marriageAnniversary , emergencyContactName  , emergencyContactNumber ,bloodGroup , nationality , profileImage  } = req.body;
+  // List of fields to validate
+const requiredFields = [
+  name, bankName, ifscCode, accountNo, panNo, beneficiaryName, phoneNumber, gender,
+  dateOfBirth, personalPhoneNumber, personalEmailAddress, fathersName, fathersDOB, mothersName,
+  mothersDOB, spousesName, spousesDOB, child1Name, child1DOB, child2Name, child2DOB, permanentAddress,
+  temporaryAddress, highestEducationalQualification, maritalStatus, aadhaarNumber, marriageAnniversary,
+  emergencyContactName, emergencyContactNumber, bloodGroup, nationality, profileImage
+];
+
+// Check if at least one field is provided
+const isAnyFieldFilled = requiredFields.some(field => field !== undefined && field !== null && field !== "");
+
+if (!isAnyFieldFilled) {
+  throw new ApiError(400, 'Please fill in at least one field to update your account');
+}
+if (personalEmailAddress) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(personalEmailAddress)) {
+    throw new ApiError(400, 'Invalid personal email format');
   }
+}
+
+if (maritalStatus) {
+  if (!marital_status_enum.includes(maritalStatus)) {
+    throw new ApiError(400, 'Invalid marital status');
+  }
+}
+
+if (bloodGroup) {
+  if (!blood_groups_enum.includes(bloodGroup)) {
+    throw new ApiError(400, 'Invalid blood group');
+  }
+}
+
 
   const user = await User.findByIdAndUpdate(
     req.user._id,
     {
       $set: {
-        email,
-        fullName,
+        name,
+        bankName,
+        ifscCode,
+        accountNo,
+        panNo,
+        beneficiaryName,
+        phoneNumber,
+        gender,
+        dateOfBirth,
+        personalPhoneNumber,
+        personalEmailAddress,
+        fathersName,
+        fathersDOB,
+        mothersName,
+        mothersDOB,
+        spousesName,
+        spousesDOB,
+        child1Name,
+        child1DOB,
+        child2Name,
+        child2DOB,
+        permanentAddress,
+        temporaryAddress,
+        highestEducationalQualification,
+        maritalStatus,
+        aadhaarNumber,
+        marriageAnniversary,
+        emergencyContactName,
+        emergencyContactNumber,
+        bloodGroup,
+        nationality,
+        profileImage,
       },
     },
     {
       new: true,
     }
-  ).select('-password -refreshToken');
+  );
 
   res.user = user;
 
@@ -460,212 +434,40 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, user, 'Account Details Updated Successfully'));
 });
 
-const updateUserAvatar = asyncHandler(async (req, res) => {
-  const avatarLocalPath = req.file?.path;
-
-  if (!avatarLocalPath) {
-    throw new ApiError(400, 'Avatar file is Required');
-  }
-
-  const avatar = await uploadOnCloudinary(avatarLocalPath, 'image');
-  if (!avatar?.url) {
-    throw new ApiError(500, 'Something went wrong uploading avatar Image');
-  }
-  const removeAvatar = await removeFromCloudinary(req.user?.avatar, 'image');
-
-  const user = await User.findByIdAndUpdate(
-    req.user?._id,
-    {
-      $set: {
-        avatar: avatar?.url,
-      },
-    },
-    {
-      new: true,
-    }
-  ).select(' -password -refreshToken');
-  req.user = user;
-
-  return res
-    .status(200)
-    .json(
-      new ApiResponse(
-        200,
-        { RemoveAvatar: removeAvatar, user },
-        'Avatar Updated Successfully'
-      )
-    );
-});
-
-const updateUserCoverImage = asyncHandler(async (req, res) => {
-  const coverImageLocalPath = req.file?.path;
-  if (!coverImageLocalPath) {
-    throw new ApiError(400, 'Cover Image file is Required');
-  }
-
-  const coverImage = await uploadOnCloudinary(coverImageLocalPath, 'image');
-  if (!coverImage?.url) {
-    throw new ApiError(500, 'Something went wrong uploading Cover Image');
-  }
-
-  const removeCoverImage = await removeFromCloudinary(
-    req.user?.coverImage,
-    'image'
-  );
-
+const markAsDeleteAccount = asyncHandler(async (req, res) => {
   const user = await User.findByIdAndUpdate(
     req.user._id,
     {
       $set: {
-        coverImage: coverImage?.url,
+        isDeleted: true,
       },
     },
     {
       new: true,
     }
-  ).select(' -password -refreshToken');
+  );
 
-  req.user = user;
-
-  return res
-    .status(200)
-    .json(
-      new ApiResponse(
-        200,
-        { RemoveCoverImage: removeCoverImage, user },
-        'Cover Image Updated Successfully'
-      )
-    );
-});
-
-const getUserChannelProfile = asyncHandler(async (req, res) => {
-  const { username } = req.params;
-  console.log(username);
-  console.log(Boolean(username?.trim()));
-
-  if (!username?.trim()) {
-    throw new ApiError(400, 'UserName is Missing');
-  }
-
-  const channel = await User.aggregate([
-    {
-      $match: {
-        username: username,
-      },
-    },
-    {
-      $lookup: {
-        from: 'Subscriptions',
-        localField: '_id',
-        foreignField: 'channel',
-        as: 'subscribers',
-      },
-    },
-    {
-      $lookup: {
-        from: 'Subscriptions',
-        localField: '_id',
-        foreignField: 'subscriber',
-        as: 'subscribedTo',
-      },
-    },
-    {
-      $addFields: {
-        subscribersCount: {
-          $size: '$subscribers',
-        },
-        channelsSubscribedToCount: {
-          $size: '$subscribedTo',
-        },
-        isSubscribed: {
-          if: { $in: [req.user?._id, '$subscribers.subscriber'] },
-          then: true,
-          else: false,
-        },
-      },
-    },
-    {
-      $project: {
-        username: 1,
-        fullName: 1,
-        avatar: 1,
-        coverImage: 1,
-        subscribersCount: 1,
-        channelsSubscribedToCount: 1,
-        isSubscribed: 1,
-        email: 1,
-      },
-    },
-  ]);
-
-  if (channel?.length) {
-    throw new ApiError(404, 'channel does not exist');
-  }
+  res.user = null;
 
   return res
-    .status(200)
-    .json(
-      new ApiResponse(
-        200,
-        channel[0],
-        'User Channel Profile Fetched Successfully'
-      )
-    );
+   .status(200)
+   .clearCookie('accessToken', options)
+   .clearCookie('refreshToken', options)
+   .json(new ApiResponse(200, {}, 'Account Marked as Deleted Successfully'));
 });
 
-const getWatchHistory = asyncHandler(async (req, res) => {
-  const user = await User.aggregate([
-    {
-      $match: {
-        _id: new mongoose.Types.ObjectId(req.user._id),
-      },
-    },
-    {
-      $lookup: {
-        from: 'Video',
-        localField: 'watchHistory',
-        foreignField: '_id',
-        as: 'watchHistory',
-        pipeline: [
-          {
-            $lookup: {
-              from: 'users',
-              localField: 'owner',
-              foreignField: '_id',
-              as: 'owner',
-              pipeline: [
-                {
-                  $project: {
-                    username: 1,
-                    fullName: 1,
-                    avatar: 1,
-                  },
-                },
-              ],
-            },
-          },
-          {
-            $addFields: {
-              owner: {
-                $first: '$owner',
-              },
-            },
-          },
-        ],
-      },
-    },
-  ]);
-
+const getCurrentUser = asyncHandler(async(req ,res) => {
   return res
-    .status(200)
-    .json(
-      new ApiResponse(
-        200,
-        user[0].watchHistory,
-        'Watch History Fetched Successfully'
-      )
-    );
-});
+ .status(200)
+ .json(
+      new ApiResponse(200 , req.user , "User Fetched Successfully")
+  )
+})
+
+
+// TODO:
+const forgotPassword = asyncHandler(async (req, res) => {});
+
 
 export {
   registerUser,
@@ -673,10 +475,9 @@ export {
   logoutUser,
   refreshAccessToken,
   changeCurrentPassword,
-  getCurrentUser,
   updateAccountDetails,
-  updateUserAvatar,
-  updateUserCoverImage,
-  getUserChannelProfile,
-  getWatchHistory,
+  markAsDeleteAccount,
+  forgotPassword,
+  getCurrentUser,
+  
 };

@@ -22,9 +22,12 @@ app.use(morgan('dev'));
 //routes
 
 import userRouter from './routes/user.routes.js';
+import userAdminRouter from './routes/user_admin.routes.js';
 
 //routes declaration
 app.use('/api/v1/users', userRouter);
+app.use('/api/v1/user-admin', userAdminRouter);
+
 
 // Error handling middleware
 app.use((err, req, res, next) => {
