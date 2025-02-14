@@ -6,8 +6,19 @@ const reimbushmentSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
-    billImage: {
+    image: {
       type: String,
+    },
+    reason: {
+      type: String,
+      required: true,
+    },
+    description: {
+      type: String,
+    },
+    userId : {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
     },
     isApproved: {
       type: Boolean,
@@ -16,13 +27,6 @@ const reimbushmentSchema = new mongoose.Schema(
     approvedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-    },
-    reason: {
-      type: String,
-      required: true,
-    },
-    description: {
-      type: String,
     },
   },
   {
