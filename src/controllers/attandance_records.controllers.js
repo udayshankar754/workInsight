@@ -339,7 +339,8 @@ const approveAttandanceRecords = asyncHandler(async (req, res) => {
     }
 
     const updateStatus = await AttandanceRecord.findByIdAndUpdate(id , {
-        isApproved : status
+        isApproved : status,
+        approvedBy : req?.user?._id
     } , {
         new: true
     })

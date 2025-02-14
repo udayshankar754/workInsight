@@ -26,6 +26,8 @@ import userAdminRouter from './routes/user_admin.routes.js';
 import clientRouter from './routes/client.routes.js';
 import projectSectionRouter from './routes/projectSection.routes.js';
 import attendanceRecordsRouter from './routes/attandance_records.routes.js';
+import holidayRouter from './routes/holiday.routes.js';
+
 //routes declaration
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/user-admin', userAdminRouter);
@@ -34,6 +36,7 @@ app.use('/api/v1/user-admin', userAdminRouter);
 app.use('/api/v1/client', clientRouter);
 app.use('/api/v1/project-section', projectSectionRouter);
 app.use('/api/v1/attandance-records', attendanceRecordsRouter);
+app.use('/api/v1/holiday', holidayRouter);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

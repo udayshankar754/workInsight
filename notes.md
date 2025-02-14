@@ -1,7 +1,7 @@
 # Work Insight Project Documentation
 
 ```helper
-touch src/routes/projectSection.routes.js src/controllers/projectSection.controllers.js
+touch src/routes/holiday.routes.js src/controllers/holiday.controllers.js src/models/holiday.routes.js
 ```
 ## Base Er Docs
 
