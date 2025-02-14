@@ -9,6 +9,17 @@ const bonusSchema = new mongoose.Schema(
     image: {
       type: String,
     },
+    reason: {
+      type: String,
+      required: true,
+    },
+    description: {
+      type: String,
+    },
+    userId : {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
     isApproved: {
       type: Boolean,
       default: false,
@@ -17,13 +28,7 @@ const bonusSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
     },
-    reason: {
-      type: String,
-      required: true,
-    },
-    description: {
-      type: String,
-    },
+   
   },
   {
     timestamps: true,
