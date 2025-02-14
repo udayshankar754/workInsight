@@ -32,6 +32,10 @@ const userDocumentSchema = new mongoose.Schema(
     employeePhoto: { type: documentSchema },
     employeeFamilyPhoto: { type: documentSchema },
     other: { type: [documentSchema] },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
   },
   {
     timestamps: true,
