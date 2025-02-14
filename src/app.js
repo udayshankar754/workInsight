@@ -29,6 +29,8 @@ import attendanceRecordsRouter from './routes/attandance_records.routes.js';
 //routes declaration
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/user-admin', userAdminRouter);
+
+
 app.use('/api/v1/client', clientRouter);
 app.use('/api/v1/project-section', projectSectionRouter);
 app.use('/api/v1/attandance-records', attendanceRecordsRouter);
