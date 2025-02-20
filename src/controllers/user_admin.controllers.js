@@ -254,7 +254,16 @@ const updatePassword = asyncHandler(async (req, res) => {});
 
 const markAsDeleteAccount = asyncHandler(async (req, res) => {});
 
-const deleteUser = asyncHandler(async (req, res) => {});
+const deleteUser = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const user = await User.findByIdAndDelete(userId);
+  if (!user) {
+    throw new ApiError(404, 'User not found');
+  }
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, 'User deleted successfully'));
+});
 
 const getUserList = asyncHandler(async (req, res) => {});
 
