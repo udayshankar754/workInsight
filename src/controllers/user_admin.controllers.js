@@ -1,4 +1,3 @@
-
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
 import { User } from '../models/user.models.js';
@@ -12,8 +11,6 @@ import {
 import { Bonus } from '../models/bonus.models.js';
 import { UserDocument } from '../models/userDocument.models.js';
 import { Reimbushment } from '../models/reimbushment.models.js';
-
-
 
 const registerUser = asyncHandler(async (req, res) => {
   const {
@@ -145,7 +142,8 @@ const registerUser = asyncHandler(async (req, res) => {
       throw new ApiError(400, 'Invalid Employee Document Id');
     }
 
-    const isEmployeeDocumentExists = await UserDocument.findById(employeeDocumentId);
+    const isEmployeeDocumentExists =
+      await UserDocument.findById(employeeDocumentId);
 
     if (!isEmployeeDocumentExists) {
       throw new ApiError(400, 'Invalid Employee Document Id');
@@ -248,7 +246,7 @@ const registerUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, user, 'User Registered Successfully'));
 });
 
-const changeUserType = asyncHandler(async(req , res) => {});
+const changeUserType = asyncHandler(async (req, res) => {});
 
 const updateUser = asyncHandler(async (req, res) => {});
 
@@ -260,9 +258,12 @@ const deleteUser = asyncHandler(async (req, res) => {});
 
 const getUserList = asyncHandler(async (req, res) => {});
 
-const getActiveUserList = asyncHandler(async (req, res) => {});
+const getActiveUserList = asyncHandler(async (req, res) => {
+  const users = await User.find({ isDeleted: false });
+  return res.json(new ApiResponse(200, users, 'Active Users List'));
+});
 
-const getUserById = asyncHandler(async (req , res) => {});
+const getUserById = asyncHandler(async (req, res) => {});
 
 export {
   registerUser,
@@ -274,5 +275,4 @@ export {
   getUserList,
   getActiveUserList,
   getUserById,
-
-}
+};
