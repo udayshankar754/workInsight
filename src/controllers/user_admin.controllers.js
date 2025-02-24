@@ -252,10 +252,29 @@ const updateUser = asyncHandler(async (req, res) => {});
 
 const updatePassword = asyncHandler(async (req, res) => {});
 
-const markAsDeleteAccount = asyncHandler(async (req, res) => {});
+const markAsDeleteAccount = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const user = await User.findByIdAndUpdate(
+    id,
+    {
+      $set: {
+        isDeleted: true,
+      },
+    },
+    {
+      new: true,
+    }
+  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, 'Account Marked as Deleted Successfully'));
+});
 
 const deleteUser = asyncHandler(async (req, res) => {
   const { userId } = req.params;
+
   const user = await User.findByIdAndDelete(userId);
   if (!user) {
     throw new ApiError(404, 'User not found');
